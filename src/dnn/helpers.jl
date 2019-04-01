@@ -102,6 +102,11 @@ function ConvDesc(T, N, padding, stride, dilation, mode)
     return this
 end
 
+function ConvDesc(T, cdims::DenseConvDims)
+    return ConvDesc(T, spatial_dims(cdims), padding(cdims), stride(cdims),
+                       dilation(cdims), flipkernel(cdims))
+end
+
 mutable struct PoolDesc; ptr; end
 free(pd::PoolDesc)=cudnnDestroyPoolingDescriptor(pd.ptr)
 Base.unsafe_convert(::Type{cudnnPoolingDescriptor_t}, pd::PoolDesc)=pd.ptr
@@ -113,6 +118,11 @@ function PoolDesc(nd, window, padding, stride, mode, maxpoolingNanOpt=CUDNN_NOT_
     this = PoolDesc(pd[])
     finalizer(free, this)
     return this
+end
+
+function PoolDesc(pdims::PoolDims, mode, maxpoolingNanOpt=CUDNN_NOT_PROPAGATE_NAN)
+    return PoolDesc(spatial_dims(pdims), kernel_size(pdims), padding(pdims),
+                    stride(pdims), mode, maxpoolingNanOpt)
 end
 
 mutable struct ActivationDesc; ptr; end
